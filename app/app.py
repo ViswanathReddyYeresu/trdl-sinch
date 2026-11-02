@@ -15,7 +15,7 @@ def create_app() -> Flask:
 
     @app.route("/readyz", methods=["GET"])
     def readiness():
-        return jsonify(status="broken"), 503
+        return jsonify(status="ready"), 200
 
     @app.errorhandler(404)
     def not_found(_):
