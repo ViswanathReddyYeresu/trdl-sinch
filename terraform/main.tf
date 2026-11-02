@@ -90,7 +90,7 @@ module "eks" {
 
   eks_managed_node_groups = {
     default = {
-      instance_types = ["t3.medium"]
+      instance_types = ["t3.small"]
       min_size       = 3
       max_size       = 6
       desired_size   = 3
@@ -162,3 +162,22 @@ resource "aws_iam_role_policy" "github_ci" {
 output "ecr_repository_url" { value = aws_ecr_repository.trdl.repository_url }
 output "cluster_name" { value = module.eks.cluster_name }
 output "github_ci_role_arn" { value = aws_iam_role.github_ci.arn }
+
+# ---------- Permissions for the AWS Load Balancer Controller (IRSA) ----------
+module "lb_controller_irsa" {
+  source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
+  version = "~> 5.0"
+
+  role_name                              = "trdl-poc-lb-controller"
+  attach_load_balancer_controller_policy = true
+
+  oidc_providers = {
+    main = {
+      provider_arn               = module.eks.oidc_provider_arn
+      namespace_service_accounts = ["kube-system:aws-load-balancer-controller"]
+    }
+  }
+}
+
+output "lb_controller_role_arn" { value = module.lb_controller_irsa.iam_role_arn }
+output "vpc_id"                 { value = module.vpc.vpc_id }
