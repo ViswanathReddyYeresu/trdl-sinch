@@ -1,0 +1,24 @@
+name: debug-oidc
+on: workflow_dispatch
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  show-claims:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Print OIDC claims (not the token itself)
+        run: |
+          python3 - <<'PY'
+          import os, json, base64, urllib.request
+          url = os.environ["ACTIONS_ID_TOKEN_REQUEST_URL"] + "&audience=sts.amazonaws.com"
+          req = urllib.request.Request(url, headers={"Authorization": "bearer " + os.environ["ACTIONS_ID_TOKEN_REQUEST_TOKEN"]})
+          token = json.load(urllib.request.urlopen(req))["value"]
+          payload = token.split(".")[1]
+          payload += "=" * (-len(payload) % 4)
+          claims = json.loads(base64.urlsafe_b64decode(payload))
+          for k in ["sub", "aud", "iss", "repository", "repository_owner", "ref", "environment"]:
+              print(k, "=", claims.get(k))
+          PY
