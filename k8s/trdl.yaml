@@ -37,7 +37,7 @@ spec:
               containerPort: 8080
           readinessProbe:
             httpGet:
-              path: /readyz
+              path: /readyz-broken
               port: http
             periodSeconds: 5
           livenessProbe:
